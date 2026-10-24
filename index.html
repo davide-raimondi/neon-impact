@@ -2,13 +2,17 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href='data:application/manifest+json,{"name":"Neon Impact: Protocol Zero","short_name":"Neon Impact","display":"fullscreen","orientation":"landscape","background_color":"#020205","theme_color":"#00ffff"}'>
     <title>Neon Impact: Protocol Zero</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,700;0,900;1,400;1,700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; touch-action: none; }
-        body, html { width: 100%; height: 100%; overflow: hidden; background-color: #020205; font-family: 'Montserrat', sans-serif; }
-        canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background-color: #020205; font-family: 'Montserrat', sans-serif; position: fixed; }
+        canvas { display: block; image-rendering: pixelated; cursor: crosshair; }
     </style>
 </head>
 <body>
@@ -19,6 +23,7 @@ const ctx = canvas.getContext("2d");
 
 ctx.imageSmoothingEnabled = false;
 const SPRITE_SCALE = 1.8;
+let isPortraitForced = false;
 
 // --- CARICAMENTO ASSET ---
 const logoImg = new Image(); 
@@ -46,12 +51,12 @@ Object.keys(sprites).forEach(key => {
 });
 
 // --- VARIABILI GLOBALI E STATO ---
-let gameState = "MENU", score = 0, globalSpeed = 1.0, screenShake = 0, forceStart = false;
+let gameState = "MENU", score = 0, globalSpeed = 1.0, screenShake = 0;
 let gameLevel = 1, bossActive = false, bossWarningTimer = 0, boss = null;
 let enemiesKilled = 0, targetKills = 25; 
 let combo = 0, comboTimer = 0, hitStop = 0, tutorialTimer = 0, levelTitleTimer = 0; 
 let paused = false;
-let highScore = localStorage.getItem("neonHighScore") || 0;
+let highScore = Number(localStorage.getItem("neonHighScore")) || 0;
 
 let spaceDebris = [];
 let stars = [];
@@ -65,9 +70,11 @@ let returnToPause = false;
 const MAX_LEVEL = 5;
 let gameTick = 0; 
 
-// --- GESTIONE INPUT TOUCH (Scorrimento LERP / Fuoco Libero) ---
+// --- GESTIONE INPUT (Touch, Mouse e Tastiera) ---
 let moveTouch = { id: null, active: false, lastX: 0, lastY: 0 };
 let fireTouch = { id: null, active: false };
+let mouseDown = false;
+const keys = {};
 
 class EnemyBagSpawner {
     constructor(composition) { this.composition = composition; this.bag = []; this.lastSpawned = null; this.fillBag(); }
@@ -85,14 +92,13 @@ class EnemyBagSpawner {
 let enemySpawner = new EnemyBagSpawner({ SHOOT: 4, FLY: 3, HEAVY: 1, KAMI: 2 });
 
 const translations = {
-    it: { title: "NEON IMPACT", subtitle: "PROTOCOL ZERO", record: "RECORD: ", startPrompt: "Tocca per iniziare", rotatePhone: "RUOTA IL TELEFONO", rotateSub: "Richiesta modalità orizzontale", paused: "PAUSA", levelClear: "SISTEMA VIOLATO!", levelClearSub: "Tocca per il Livello ", gameOver: "SYSTEM FAILURE", gameOverSub: "Punteggio: {score}", victory: "COMPLETATO!", victorySub: "Punteggio: {score}", returnMenu: "Tocca per il Menu", bossWarning: "! BOSS RILEVATO !", tutorialMove: "👆 SCORRI", tutorialMoveSub: "PER MUOVERTI", tutorialShoot: "🎯 TIENI PREMUTO", tutorialShootSub: "PER SPARARE", score: "PUNTEGGIO: ", highScoreHUD: "RECORD: ", levelHUD: "LIVELLO", settings: "IMPOSTAZIONI", audio: "AUDIO: ", lang: "LINGUA: ", controls: "MOVIMENTO: ", rightHand: "DESTRA", leftHand: "SINISTRA", mainMenu: "MENU PRINCIPALE", on: "ON", off: "OFF" },
-    en: { title: "NEON IMPACT", subtitle: "PROTOCOL ZERO", record: "RECORD: ", startPrompt: "Tap to start", rotatePhone: "ROTATE PHONE", rotateSub: "Horizontal mode required", paused: "PAUSED", levelClear: "SYSTEM BREACHED!", levelClearSub: "Tap for Level ", gameOver: "SYSTEM FAILURE", gameOverSub: "Score: {score}", victory: "COMPLETED!", victorySub: "Score: {score}", returnMenu: "Tap for Menu", bossWarning: "! BOSS DETECTED !", tutorialMove: "👆 SWIPE", tutorialMoveSub: "TO MOVE", tutorialShoot: "🎯 HOLD", tutorialShootSub: "TO SHOOT", score: "SCORE: ", highScoreHUD: "RECORD: ", levelHUD: "LEVEL", settings: "SETTINGS", audio: "AUDIO: ", lang: "LANGUAGE: ", controls: "MOVEMENT: ", rightHand: "RIGHT", leftHand: "LEFT", mainMenu: "MAIN MENU", on: "ON", off: "OFF" }
+    it: { title: "NEON IMPACT", subtitle: "PROTOCOL ZERO", record: "RECORD: ", startPrompt: "Tocca per iniziare", paused: "PAUSA", levelClear: "SISTEMA VIOLATO!", levelClearSub: "Tocca per il Livello ", gameOver: "SYSTEM FAILURE", gameOverSub: "Punteggio: {score}", victory: "COMPLETATO!", victorySub: "Punteggio: {score}", returnMenu: "Tocca per il Menu", bossWarning: "! BOSS RILEVATO !", tutorialMove: "👆 SCORRI", tutorialMoveSub: "PER MUOVERTI", tutorialShoot: "🎯 TIENI PREMUTO", tutorialShootSub: "PER SPARARE", score: "PUNTEGGIO: ", highScoreHUD: "RECORD: ", levelHUD: "LIVELLO", settings: "IMPOSTAZIONI", audio: "AUDIO: ", lang: "LINGUA: ", controls: "MOVIMENTO: ", rightHand: "DESTRA", leftHand: "SINISTRA", mainMenu: "MENU PRINCIPALE", on: "ON", off: "OFF" },
+    en: { title: "NEON IMPACT", subtitle: "PROTOCOL ZERO", record: "RECORD: ", startPrompt: "Tap to start", paused: "PAUSED", levelClear: "SYSTEM BREACHED!", levelClearSub: "Tap for Level ", gameOver: "SYSTEM FAILURE", gameOverSub: "Score: {score}", victory: "COMPLETED!", victorySub: "Score: {score}", returnMenu: "Tap for Menu", bossWarning: "! BOSS DETECTED !", tutorialMove: "👆 SWIPE", tutorialMoveSub: "TO MOVE", tutorialShoot: "🎯 HOLD", tutorialShootSub: "TO SHOOT", score: "SCORE: ", highScoreHUD: "RECORD: ", levelHUD: "LEVEL", settings: "SETTINGS", audio: "AUDIO: ", lang: "LANGUAGE: ", controls: "MOVEMENT: ", rightHand: "RIGHT", leftHand: "LEFT", mainMenu: "MAIN MENU", on: "ON", off: "OFF" }
 };
 function t(key) { return translations[currentLang][key]; }
 
-// Navicella con targetX e targetY per il LERP
 const player = { 
-    x: 140, y: 0, targetX: 140, targetY: 0, 
+    x: 140, y: 0, targetX: 140, targetY: 0, tilt: 0, muzzleFlash: 0,
     w: 34, h: 32, hp: 100, maxHp: 100, lives: 3, weapon: 1, 
     shootCooldown: 0, color: "#00ffff", invulnTimer: 0, shieldTimer: 0, damageFlash: 0 
 };
@@ -100,7 +106,6 @@ const player = {
 let bullets = [], enemyBullets = [], enemies = [], particles = [], drops = [], popups = [], playerTrails = [];
 let enemySpawnTimer = 0, itemSpawnTimer = 0, bossDefeatFlash = 0;
 
-// Pulsante Pausa spostato in alto a destra
 const buttons = { pause: { x: 0, y: 35, r: 20, label: "‖", pressed: false } };
 
 function getLevelColor() { return ["#00ffff", "#00ff66", "#ff00ff", "#ffff00", "#ff3333"][Math.min(gameLevel-1, 4)]; }
@@ -111,103 +116,189 @@ function initSpaceEnvironment() {
     for(let i=0; i<25; i++) spaceDebris.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, w: Math.random()*40+10, h: Math.random()*15+5, speed: Math.random()*0.8+0.2, c: "rgba(0, 255, 255, " + (Math.random()*0.05+0.01) + ")" });
 }
 
+// --- GESTIONE ORIZZONTALE FORZATA E RESIZE ---
 function resizeCanvas() {
-    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    const ww = window.innerWidth;
+    const wh = window.innerHeight;
+
+    if (ww < wh) {
+        isPortraitForced = true;
+        canvas.width = wh;
+        canvas.height = ww;
+        canvas.style.width = wh + "px";
+        canvas.style.height = ww + "px";
+        canvas.style.position = "absolute";
+        canvas.style.top = "50%";
+        canvas.style.left = "50%";
+        canvas.style.transform = "translate(-50%, -50%) rotate(90deg)";
+    } else {
+        isPortraitForced = false;
+        canvas.width = ww;
+        canvas.height = wh;
+        canvas.style.width = "100%";
+        canvas.style.height = "100%";
+        canvas.style.position = "static";
+        canvas.style.transform = "none";
+    }
+
     ctx.imageSmoothingEnabled = false; 
     buttons.pause.x = canvas.width - 45; 
-    if (gameState === "PLAY" && player.y === 0) {
+    if (player.y === 0) {
         player.y = canvas.height / 2;
         player.targetY = canvas.height / 2;
+    } else {
+        player.y = Math.max(10, Math.min(canvas.height - player.h - 10, player.y));
+        player.targetY = Math.max(10, Math.min(canvas.height - player.h - 10, player.targetY));
     }
     initSpaceEnvironment();
 }
 window.addEventListener("resize", resizeCanvas);
+window.addEventListener("orientationchange", () => setTimeout(resizeCanvas, 100));
 
+function getCanvasCoords(clientX, clientY) {
+    if (isPortraitForced) {
+        return {
+            x: clientY,
+            y: window.innerWidth - clientX
+        };
+    }
+    return { x: clientX, y: clientY };
+}
+
+function tryLockLandscape() {
+    if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock("landscape").catch(() => {});
+    }
+}
+
+// Auto-Pausa
+function triggerAutoPause() {
+    if (gameState === "PLAY" && !paused) {
+        paused = true;
+        moveTouch.active = false;
+        fireTouch.active = false;
+        mouseDown = false;
+    }
+}
+document.addEventListener("visibilitychange", () => { if (document.hidden) triggerAutoPause(); });
+window.addEventListener("blur", triggerAutoPause);
+
+// --- SISTEMA AUDIO PROCEDURALE ---
 let audioCtx = null;
 function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
 
 function playSound(type) {
     if (!audioCtx || !soundEnabled) return;
     try {
+        let now = audioCtx.currentTime;
         let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
         osc.connect(gain); gain.connect(audioCtx.destination);
-        if (type === 'shoot') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(550, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.08); gain.gain.setValueAtTime(0.08, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08); osc.start(); osc.stop(audioCtx.currentTime + 0.08); } 
-        else if (type === 'exp') { osc.type = 'triangle'; osc.frequency.setValueAtTime(180, audioCtx.currentTime); osc.frequency.linearRampToValueAtTime(30, audioCtx.currentTime + 0.25); gain.gain.setValueAtTime(0.25, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25); osc.start(); osc.stop(audioCtx.currentTime + 0.25); } 
-        else if (type === 'up') { osc.type = 'sine'; osc.frequency.setValueAtTime(350, audioCtx.currentTime); osc.frequency.setValueAtTime(700, audioCtx.currentTime + 0.07); gain.gain.setValueAtTime(0.15, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2); osc.start(); osc.stop(audioCtx.currentTime + 0.2); }
+        if (type === 'shoot') { 
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(550, now); osc.frequency.exponentialRampToValueAtTime(80, now + 0.08); 
+            gain.gain.setValueAtTime(0.07, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08); 
+            osc.start(now); osc.stop(now + 0.08); 
+        } 
+        else if (type === 'exp') { 
+            osc.type = 'triangle'; osc.frequency.setValueAtTime(180, now); osc.frequency.linearRampToValueAtTime(30, now + 0.25); 
+            gain.gain.setValueAtTime(0.25, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25); 
+            osc.start(now); osc.stop(now + 0.25); 
+        } 
+        else if (type === 'up') { 
+            osc.type = 'sine'; osc.frequency.setValueAtTime(350, now); osc.frequency.setValueAtTime(700, now + 0.07); 
+            gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2); 
+            osc.start(now); osc.stop(now + 0.2); 
+        }
+        else if (type === 'hurt') {
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(140, now); osc.frequency.linearRampToValueAtTime(45, now + 0.22);
+            gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+            osc.start(now); osc.stop(now + 0.22);
+        }
+        else if (type === 'warn') {
+            osc.type = 'square'; osc.frequency.setValueAtTime(440, now); osc.frequency.linearRampToValueAtTime(880, now + 0.18);
+            gain.gain.setValueAtTime(0.12, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+            osc.start(now); osc.stop(now + 0.18);
+        }
+        else if (type === 'laser') {
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(900, now); osc.frequency.exponentialRampToValueAtTime(150, now + 0.35);
+            gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+            osc.start(now); osc.stop(now + 0.35);
+        }
     } catch(e){}
 }
 
 function updateHighScore() { if (score > highScore) { highScore = score; localStorage.setItem("neonHighScore", highScore); } }
 
+// --- GESTIONE INTERFACCIA E PUNTATORI ---
+function handleMenuPointer(tx, ty) {
+    initAudio();
+    tryLockLandscape();
+
+    if (gameState === "SETTINGS" || paused) {
+        if (tx > canvas.width - 70 && tx < canvas.width - 10 && ty > 10 && ty < 70) {
+            if (gameState === "SETTINGS") { gameState = returnToPause ? "PLAY" : "MENU"; returnToPause = false; paused = (gameState === "PLAY"); }
+            else if (paused) { paused = false; }
+            playSound('up'); return true;
+        }
+        
+        if (gameState === "SETTINGS") {
+            let cx = canvas.width / 2; let btnW = Math.min(300, canvas.width - 40);
+            let btnH = 42, gap = 55;
+            let totalMenuH = (returnToPause ? 4 : 3) * gap;
+            let startY = (canvas.height - totalMenuH) / 2 + 30;
+            
+            if (tx > cx - btnW/2 && tx < cx + btnW/2) {
+                if (ty > startY && ty < startY + btnH) { soundEnabled = !soundEnabled; localStorage.setItem("neonSound", soundEnabled); playSound('up'); }
+                else if (ty > startY + gap && ty < startY + gap + btnH) { currentLang = currentLang === "it" ? "en" : "it"; localStorage.setItem("neonLang", currentLang); playSound('up'); }
+                else if (ty > startY + gap*2 && ty < startY + gap*2 + btnH) { leftHanded = !leftHanded; localStorage.setItem("neonHandedness", leftHanded); resizeCanvas(); playSound('up'); }
+                else if (ty > startY + gap*3 && ty < startY + gap*3 + btnH && returnToPause) { gameState = "MENU"; paused = false; returnToPause = false; playSound('up'); }
+            }
+        } else if (paused && !returnToPause) {
+            let cx = canvas.width / 2;
+            let btnH = 42, gap = 55;
+            let startY = (canvas.height - (2 * gap)) / 2 + 20;
+            if (tx > cx - 120 && tx < cx + 120) {
+                if (ty > startY && ty < startY + btnH) { gameState = "SETTINGS"; returnToPause = true; playSound('up'); return true; }
+                if (ty > startY + gap && ty < startY + gap + btnH) { gameState = "MENU"; paused = false; updateHighScore(); playSound('up'); return true; }
+            }
+        }
+        return true; 
+    }
+
+    if (gameState !== "PLAY") {
+        if (gameState === "MENU") {
+            let btnX = canvas.width - 160, btnY = 20, btnW = 140, btnH = 35;
+            if (tx >= btnX - 10 && tx <= btnX + btnW + 10 && ty >= btnY - 10 && ty <= btnY + btnH + 10) { gameState = "SETTINGS"; playSound('up'); return true; }
+            if(document.documentElement.requestFullscreen && ('ontouchstart' in window)) document.documentElement.requestFullscreen().catch(()=>{});
+            tryLockLandscape();
+            initGame(); gameState = "PLAY"; playSound('up'); return true; 
+        }
+        if (gameState === "GAMEOVER" || gameState === "VICTORY") { gameState = "MENU"; playSound('up'); return true; }
+        if (gameState === "LEVEL_CLEAR") { advanceLevel(); gameState = "PLAY"; playSound('up'); return true; }
+        return true;
+    }
+    return false;
+}
+
 function handleTouches(e) {
     if(e) e.preventDefault();
     initAudio(); 
     
-    if (gameState === "SETTINGS" || paused) {
-        if (e.type === "touchstart") {
-            for (let i = 0; i < e.touches.length; i++) {
-                let tx = e.touches[i].clientX, ty = e.touches[i].clientY;
-                // Pulsante X (Chiudi)
-                if (tx > canvas.width - 70 && tx < canvas.width - 10 && ty > 10 && ty < 70) {
-                    if (gameState === "SETTINGS") { gameState = returnToPause ? "PLAY" : "MENU"; returnToPause = false; paused = (gameState === "PLAY"); }
-                    else if (paused) { paused = false; }
-                    playSound('up'); return;
-                }
-                
-                if (gameState === "SETTINGS") {
-                    let cx = canvas.width / 2; let btnW = Math.min(300, canvas.width - 40);
-                    let btnH = 42, gap = 55;
-                    let totalMenuH = (returnToPause ? 4 : 3) * gap;
-                    let startY = (canvas.height - totalMenuH) / 2 + 30; // Centratura dinamica
-                    
-                    if (tx > cx - btnW/2 && tx < cx + btnW/2) {
-                        if (ty > startY && ty < startY + btnH) { soundEnabled = !soundEnabled; localStorage.setItem("neonSound", soundEnabled); playSound('up'); }
-                        else if (ty > startY + gap && ty < startY + gap + btnH) { currentLang = currentLang === "it" ? "en" : "it"; localStorage.setItem("neonLang", currentLang); playSound('up'); }
-                        else if (ty > startY + gap*2 && ty < startY + gap*2 + btnH) { leftHanded = !leftHanded; localStorage.setItem("neonHandedness", leftHanded); resizeCanvas(); playSound('up'); }
-                        else if (ty > startY + gap*3 && ty < startY + gap*3 + btnH && returnToPause) { gameState = "MENU"; paused = false; returnToPause = false; playSound('up'); }
-                    }
-                } else if (paused && !returnToPause) {
-                    let cx = canvas.width / 2;
-                    let btnH = 42, gap = 55;
-                    let startY = (canvas.height - (2 * gap)) / 2 + 20;
-                    if (tx > cx - 120 && tx < cx + 120) {
-                        if (ty > startY && ty < startY + btnH) { gameState = "SETTINGS"; returnToPause = true; return; }
-                        if (ty > startY + gap && ty < startY + gap + btnH) { gameState = "MENU"; paused = false; updateHighScore(); return; }
-                    }
-                }
-            }
-        }
-        return; 
+    if (e.type === "touchstart" && e.touches.length > 0) {
+        let coords = getCanvasCoords(e.touches[0].clientX, e.touches[0].clientY);
+        if (handleMenuPointer(coords.x, coords.y)) return;
     }
-
-    if (gameState !== "PLAY") {
-        if (e.touches.length > 0 && e.type === "touchstart") {
-            let tx = e.touches[0].clientX, ty = e.touches[0].clientY;
-            if (gameState === "MENU") {
-                let btnX = canvas.width - 160, btnY = 20, btnW = 140, btnH = 35;
-                if (tx >= btnX - 10 && tx <= btnX + btnW + 10 && ty >= btnY - 10 && ty <= btnY + btnH + 10) { gameState = "SETTINGS"; return; }
-                if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(e=>{});
-                if(screen.orientation && screen.orientation.lock) screen.orientation.lock("landscape").catch(e=>{});
-                initGame(); gameState = "PLAY"; return; 
-            }
-            if (gameState === "GAMEOVER" || gameState === "VICTORY") { gameState = "MENU"; return; }
-            if (gameState === "LEVEL_CLEAR") { advanceLevel(); gameState = "PLAY"; return; }
-        }
-        return;
-    }
+    if (gameState !== "PLAY" || paused) return;
 
     for (let i = 0; i < e.changedTouches.length; i++) {
         let touch = e.changedTouches[i];
-        let tx = touch.clientX, ty = touch.clientY;
+        let coords = getCanvasCoords(touch.clientX, touch.clientY);
+        let tx = coords.x, ty = coords.y;
 
         if (e.type === "touchstart") {
-            if (Math.hypot(tx - buttons.pause.x, ty - buttons.pause.y) < buttons.pause.r + 20) { paused = true; moveTouch.active = false; fireTouch.active = false; return; }
+            if (Math.hypot(tx - buttons.pause.x, ty - buttons.pause.y) < buttons.pause.r + 20) { paused = true; moveTouch.active = false; fireTouch.active = false; playSound('up'); return; }
             let isMoveZone = leftHanded ? (tx > canvas.width / 2) : (tx < canvas.width / 2);
             if (isMoveZone) { 
-                if (!moveTouch.active) { 
-                    moveTouch.active = true; moveTouch.id = touch.identifier; 
-                    moveTouch.lastX = tx; moveTouch.lastY = ty; 
-                } 
+                if (!moveTouch.active) { moveTouch.active = true; moveTouch.id = touch.identifier; moveTouch.lastX = tx; moveTouch.lastY = ty; } 
             } else { 
                 if (!fireTouch.active) { fireTouch.active = true; fireTouch.id = touch.identifier; } 
             }
@@ -216,15 +307,8 @@ function handleTouches(e) {
             if (moveTouch.active && touch.identifier === moveTouch.id) {
                 let dx = tx - moveTouch.lastX; 
                 let dy = ty - moveTouch.lastY;
-                
-                // Aggiorniamo il TARGET, applicando sensibilità
-                player.targetX += dx * 1.6;
-                player.targetY += dy * 1.6;
-
-                // Vincoliamo subito il target allo schermo
-                player.targetX = Math.max(10, Math.min(canvas.width - player.w - 10, player.targetX));
-                player.targetY = Math.max(10, Math.min(canvas.height - player.h - 10, player.targetY));
-
+                player.targetX = Math.max(10, Math.min(canvas.width - player.w - 10, player.targetX + dx * 1.6));
+                player.targetY = Math.max(10, Math.min(canvas.height - player.h - 10, player.targetY + dy * 1.6));
                 moveTouch.lastX = tx; moveTouch.lastY = ty;
             }
         } 
@@ -234,10 +318,56 @@ function handleTouches(e) {
         }
     }
 }
+
 canvas.addEventListener("touchstart", handleTouches, { passive: false });
 canvas.addEventListener("touchmove", handleTouches, { passive: false });
 canvas.addEventListener("touchend", handleTouches, { passive: false });
 canvas.addEventListener("touchcancel", handleTouches, { passive: false });
+
+// Supporto Mouse Desktop
+canvas.addEventListener("mousedown", (e) => {
+    let coords = getCanvasCoords(e.clientX, e.clientY);
+    if (handleMenuPointer(coords.x, coords.y)) return;
+    if (gameState === "PLAY" && !paused) {
+        if (Math.hypot(coords.x - buttons.pause.x, coords.y - buttons.pause.y) < buttons.pause.r + 20) {
+            paused = true; mouseDown = false; fireTouch.active = false; playSound('up'); return;
+        }
+        mouseDown = true;
+        fireTouch.active = true;
+        moveTouch.lastX = coords.x;
+        moveTouch.lastY = coords.y;
+    }
+});
+window.addEventListener("mousemove", (e) => {
+    if (mouseDown && gameState === "PLAY" && !paused) {
+        let coords = getCanvasCoords(e.clientX, e.clientY);
+        let dx = coords.x - moveTouch.lastX;
+        let dy = coords.y - moveTouch.lastY;
+        player.targetX = Math.max(10, Math.min(canvas.width - player.w - 10, player.targetX + dx * 1.3));
+        player.targetY = Math.max(10, Math.min(canvas.height - player.h - 10, player.targetY + dy * 1.3));
+        moveTouch.lastX = coords.x;
+        moveTouch.lastY = coords.y;
+    }
+});
+window.addEventListener("mouseup", () => {
+    if (mouseDown) { mouseDown = false; fireTouch.active = false; }
+});
+
+// Supporto Tastiera Desktop
+window.addEventListener("keydown", (e) => {
+    keys[e.code] = true;
+    initAudio();
+    if (e.code === "KeyP" || e.code === "Escape") {
+        if (gameState === "PLAY") { paused = !paused; playSound('up'); }
+        else if (gameState === "SETTINGS") { gameState = returnToPause ? "PLAY" : "MENU"; returnToPause = false; paused = (gameState === "PLAY"); playSound('up'); }
+    }
+    if (e.code === "Space" || e.code === "Enter") {
+        if (gameState === "MENU") { initGame(); gameState = "PLAY"; playSound('up'); }
+        else if (gameState === "GAMEOVER" || gameState === "VICTORY") { gameState = "MENU"; playSound('up'); }
+        else if (gameState === "LEVEL_CLEAR") { advanceLevel(); gameState = "PLAY"; playSound('up'); }
+    }
+});
+window.addEventListener("keyup", (e) => { keys[e.code] = false; });
 
 function initGame() { 
     player.hp = player.maxHp; player.lives = 3; player.weapon = 1; player.shieldTimer = 0; player.damageFlash = 0; score = 0; gameLevel = 1; paused = false; bossDefeatFlash = 0; moveTouch.active = false; fireTouch.active = false; initLevel(); 
@@ -246,7 +376,7 @@ function advanceLevel() { gameLevel++; player.hp = player.maxHp; initLevel(); }
 function initLevel() {
     player.x = 140; player.targetX = 140; 
     player.y = canvas.height/2; player.targetY = canvas.height/2;
-    player.invulnTimer = 0;
+    player.tilt = 0; player.invulnTimer = 0;
     bullets=[]; enemyBullets=[]; enemies=[]; particles=[]; drops=[]; popups=[]; playerTrails=[];
     combo=0; comboTimer=0; hitStop=0; enemySpawnTimer=0; itemSpawnTimer=0; bossActive=false; bossWarningTimer=0; boss=null;
     enemiesKilled = 0; bossDefeatFlash = 0; levelDropsSpawned = { GUN: 0, SHIELD: 0, HEART: 0 };
@@ -262,16 +392,17 @@ function isColliding(a, b) { let p = (a === player) ? 8 : 0; return a.x+p < b.x+
 function playerDamage(amount) {
     if (player.invulnTimer > 0 || player.shieldTimer > 0) return false;
     player.hp -= amount; screenShake += 12; player.invulnTimer = 60; player.damageFlash = 12; hitStop = 6; combo = 0;
+    playSound('hurt');
     popup(player.x, player.y - 20, `-${amount} HP`, "#ff0055");
     if (player.hp <= 0) {
         player.lives--; player.hp = player.maxHp; player.weapon = Math.max(1, player.weapon - 1); 
+        spawnExp(player.x + player.w/2, player.y + player.h/2, "#ff0055", 35);
         popup(player.x, player.y-40, currentLang === "it" ? "-1 VITA" : "-1 LIFE", "#ff0000");
         if (player.lives <= 0) { gameState = "GAMEOVER"; updateHighScore(); }
     }
     return true;
 }
 
-// dt = Delta Time multiplier (1.0 a 60fps)
 function update(dt) {
     if (paused) return;
     gameTick += dt;
@@ -292,23 +423,42 @@ function update(dt) {
     if (player.shieldTimer > 0) player.shieldTimer -= dt;
     if (player.damageFlash > 0) player.damageFlash -= dt;
     if (player.invulnTimer > 0) player.invulnTimer -= dt;
+    if (player.muzzleFlash > 0) player.muzzleFlash -= dt;
     if (comboTimer > 0) { comboTimer -= dt; if (comboTimer <= 0) combo = 0; }
     if (player.shootCooldown > 0) player.shootCooldown -= dt;
 
     let levelProgress = Math.min(1, enemiesKilled / targetKills);
     globalSpeed = 1.0 + ((gameLevel - 1) * 0.25) + (levelProgress * 0.4); 
     
-    // --- LERP DELLA NAVICELLA ---
-    // Movimento fluido verso il target calcolato nel touch
-    let lerpSpeed = 0.3 * dt; // Fattore di scivolamento (più alto = più reattivo)
-    player.x += (player.targetX - player.x) * lerpSpeed;
-    player.y += (player.targetY - player.y) * lerpSpeed;
+    // Movimento da Tastiera
+    let kbSpeed = 7.5 * dt;
+    let kbMoving = false;
+    if (keys["ArrowLeft"] || keys["KeyA"]) { player.targetX -= kbSpeed; kbMoving = true; }
+    if (keys["ArrowRight"] || keys["KeyD"]) { player.targetX += kbSpeed; kbMoving = true; }
+    if (keys["ArrowUp"] || keys["KeyW"]) { player.targetY -= kbSpeed; kbMoving = true; }
+    if (keys["ArrowDown"] || keys["KeyS"]) { player.targetY += kbSpeed; kbMoving = true; }
+    if (kbMoving) {
+        player.targetX = Math.max(10, Math.min(canvas.width - player.w - 10, player.targetX));
+        player.targetY = Math.max(10, Math.min(canvas.height - player.h - 10, player.targetY));
+    }
 
-    if (moveTouch.active && Math.floor(gameTick) % 3 === 0) { playerTrails.push({ x: player.x, y: player.y, a: 0.5 }); }
+    // --- LERP E BANKING DELLA NAVICELLA ---
+    let lerpSpeed = Math.min(1, 0.3 * dt);
+    let dy = player.targetY - player.y;
+    player.x += (player.targetX - player.x) * lerpSpeed;
+    player.y += dy * lerpSpeed;
+    
+    let targetTilt = Math.max(-0.28, Math.min(0.28, dy * 0.018));
+    player.tilt += (targetTilt - player.tilt) * Math.min(1, 0.25 * dt);
+
+    let isMoving = moveTouch.active || mouseDown || kbMoving;
+    if (isMoving && Math.floor(gameTick) % 3 === 0) { playerTrails.push({ x: player.x, y: player.y, a: 0.5, tilt: player.tilt }); }
     for(let i = playerTrails.length - 1; i >= 0; i--) { playerTrails[i].a -= 0.06 * dt; if (playerTrails[i].a <= 0) playerTrails.splice(i, 1); }
 
-    if (fireTouch.active && player.shootCooldown <= 0) {
+    let isFiring = fireTouch.active || keys["Space"] || keys["KeyZ"];
+    if (isFiring && player.shootCooldown <= 0) {
         playSound('shoot'); 
+        player.muzzleFlash = 3;
         player.shootCooldown = player.weapon === 3 ? 6 : (player.weapon === 2 ? 9 : 14);
         let py = player.y + 12;
         if(player.weapon === 1) { bullets.push({x:player.x+player.w, y:py, vx:14, vy:0, w:16, h:4, c:"#ff0055", type: 1}); }
@@ -326,11 +476,17 @@ function update(dt) {
     if (enemiesKilled >= targetKills && !bossActive && boss === null) { bossActive = true; bossWarningTimer = 180; }
     
     if (bossActive) {
-        if (bossWarningTimer > 0) { bossWarningTimer -= dt; if (Math.floor(bossWarningTimer) % 20 === 0) screenShake = 5; enemies = []; } 
+        if (bossWarningTimer > 0) { 
+            let prevTick = Math.floor(bossWarningTimer / 25);
+            bossWarningTimer -= dt; 
+            if (Math.floor(bossWarningTimer / 25) < prevTick) { screenShake = 5; playSound('warn'); }
+            enemies = []; 
+        } 
         else if (boss === null) { boss = { x: canvas.width + 50, y: canvas.height/2 - 40, w: 80, h: 80, hp: 50+(gameLevel*85), maxHp: 50+(gameLevel*85), dirY: 1, speedY: 1.5+(gameLevel*0.4), timer: 0, state: "MOVE", lTimer: 0, phase: 1, flash: 0 }; }
     }
 
     if (boss !== null) {
+        if (boss.flash > 0) boss.flash = Math.max(0, boss.flash - dt);
         if (boss.x > canvas.width - 120) boss.x -= 2 * dt; 
         else {
             if (boss.state === "MOVE") {
@@ -354,7 +510,8 @@ function update(dt) {
                 }
                 if(boss.hp < boss.maxHp/2 && boss.phase === 1) { boss.lTimer += dt; if(boss.lTimer > 200 - (gameLevel*15)) { boss.state = "CHARGE"; boss.lTimer=0; enemyBullets = []; } }
             } else if (boss.state === "CHARGE") {
-                boss.y += (((canvas.height / 2) - (boss.h / 2)) - boss.y) * 0.1 * dt; boss.lTimer += dt; if (boss.lTimer > 60) { boss.state = "FIRE"; boss.lTimer = 0; screenShake = 8; }
+                boss.y += (((canvas.height / 2) - (boss.h / 2)) - boss.y) * 0.1 * dt; boss.lTimer += dt; 
+                if (boss.lTimer > 60) { boss.state = "FIRE"; boss.lTimer = 0; screenShake = 8; playSound('laser'); }
             } else if (boss.state === "FIRE") {
                 boss.lTimer += dt; screenShake = 3; let t = boss.y+20, b = boss.y+60; 
                 if (player.x < boss.x && player.y+player.h > t && player.y < b) playerDamage(35);
@@ -364,7 +521,7 @@ function update(dt) {
         for (let j = bullets.length - 1; j >= 0; j--) { 
             let bl = bullets[j]; if(!bl) continue; 
             if (isColliding(bl, boss)) { 
-                bullets.splice(j, 1); boss.hp--; boss.flash = 5; hitStop = 1;
+                bullets.splice(j, 1); boss.hp--; boss.flash = 4; hitStop = 1;
                 particles.push({ x:bl.x, y:bl.y, vx:(Math.random()-0.5)*4, vy:(Math.random()-0.5)*4, r:2, c:"#fff", a:1, d:0.1}); 
                 if (boss.hp <= 0) { 
                     if (gameLevel === MAX_LEVEL && boss.phase === 1) {
@@ -401,6 +558,7 @@ function update(dt) {
 
     for (let i = enemies.length - 1; i >= 0; i--) {
         let e = enemies[i];
+        if (e.flash > 0) e.flash = Math.max(0, e.flash - dt);
         let isHighLevel = gameLevel >= 4;
 
         if (e.type === "FLY") { 
@@ -435,7 +593,7 @@ function update(dt) {
         for (let j = bullets.length - 1; j >= 0; j--) { 
             let bl = bullets[j]; if(!bl) continue;
             if (isColliding(bl, e)) { 
-                bullets.splice(j, 1); e.hp--; e.flash = 3; hitStop = 2; 
+                bullets.splice(j, 1); e.hp--; e.flash = 4; hitStop = 2; 
                 particles.push({x:bl.x, y:bl.y, vx:(Math.random()-0.5)*2, vy:(Math.random()-0.5)*2, r:2, c:"#fff", a:1, d:0.1}); 
                 if (e.hp <= 0) { 
                     enemiesKilled++; combo++; comboTimer = 180; hitStop = 4; let mult = 1 + Math.floor(combo/5);
@@ -487,42 +645,23 @@ function update(dt) {
         if (d.x < -40) drops.splice(i, 1); 
     }
 
-    for (let i = particles.length - 1; i >= 0; i--) { let p = particles[i]; p.vx *= 0.96; p.vy *= 0.96; p.x += p.vx * dt; p.y += p.vy * dt; p.a -= p.d * dt; if (p.a <= 0) particles.splice(i, 1); }
+    let friction = Math.pow(0.96, dt);
+    for (let i = particles.length - 1; i >= 0; i--) { let p = particles[i]; p.vx *= friction; p.vy *= friction; p.x += p.vx * dt; p.y += p.vy * dt; p.a -= p.d * dt; if (p.a <= 0) particles.splice(i, 1); }
     for (let i = popups.length - 1; i >= 0; i--) { let t = popups[i]; t.x += (t.vx || 0) * dt; t.y += t.vy * dt; t.vy += 0.15 * dt; t.a -= 0.015 * dt; if (t.a <= 0) popups.splice(i, 1); }
     if (screenShake > 0) screenShake = Math.max(0, screenShake - (0.5 * dt));
 }
 
 // --- RENDERING GRAFICO ---
-// Sostituzione di shadowBlur con un sistema di Alpha compositing (molto più leggero su Mobile)
 function drawFastNeon(x, y, w, h, color) { 
     ctx.fillStyle = color;
-    ctx.globalAlpha = 0.3; // Simula l'ombra/glow
+    ctx.globalAlpha = 0.3;
     ctx.fillRect(x - 4, y - 4, w + 8, h + 8); 
-    ctx.globalAlpha = 1.0; // Core solido
+    ctx.globalAlpha = 1.0;
     ctx.fillRect(x, y, w, h); 
 }
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // SCHERMATA ROTAZIONE ANIMATA
-    if (canvas.width < canvas.height && !forceStart) {
-        ctx.fillStyle = "#020205"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        ctx.save();
-        ctx.translate(canvas.width/2, canvas.height/2 - 40);
-        let t_rot = (Date.now() / 500) % (Math.PI);
-        ctx.rotate(Math.min(t_rot, Math.PI/2)); 
-        ctx.strokeStyle = "#fff"; ctx.lineWidth = 4;
-        ctx.strokeRect(-20, -40, 40, 80);
-        ctx.fillStyle = "#f05"; ctx.beginPath(); ctx.arc(0, 25, 4, 0, Math.PI*2); ctx.fill();
-        ctx.restore();
-
-        ctx.textAlign = "center";
-        ctx.fillStyle = "#f05"; ctx.font = "bold 24px 'Montserrat', sans-serif"; ctx.fillText(t("rotatePhone"), canvas.width/2, canvas.height/2 + 40);
-        ctx.fillStyle = "#fff"; ctx.font = "14px 'Montserrat', sans-serif"; ctx.fillText(t("rotateSub"), canvas.width/2, canvas.height/2 + 70);
-        ctx.textAlign = "left"; return;
-    }
 
     ctx.save();
     if (screenShake > 0) ctx.translate((Math.random()-0.5)*screenShake, (Math.random()-0.5)*screenShake);
@@ -534,11 +673,17 @@ function draw() {
     if (gameState === "PLAY") {
         playerTrails.forEach(tr => { 
             ctx.save(); ctx.globalAlpha = tr.a; ctx.fillStyle = player.color;
-            ctx.beginPath(); ctx.moveTo(tr.x+player.w, tr.y+player.h/2); ctx.lineTo(tr.x+player.w*0.4, tr.y); ctx.lineTo(tr.x, tr.y+player.h*0.2); ctx.lineTo(tr.x+10, tr.y+player.h/2); ctx.lineTo(tr.x, tr.y+player.h*0.8); ctx.lineTo(tr.x+player.w*0.4, tr.y+player.h); ctx.closePath(); ctx.fill(); ctx.restore();
+            ctx.translate(tr.x + player.w/2, tr.y + player.h/2);
+            ctx.rotate(tr.tilt || 0);
+            ctx.translate(-player.w/2, -player.h/2);
+            ctx.beginPath(); ctx.moveTo(player.w, player.h/2); ctx.lineTo(player.w*0.4, 0); ctx.lineTo(0, player.h*0.2); ctx.lineTo(10, player.h/2); ctx.lineTo(0, player.h*0.8); ctx.lineTo(player.w*0.4, player.h); ctx.closePath(); ctx.fill(); ctx.restore();
         });
 
         if (player.invulnTimer <= 0 || Math.floor(Date.now()/100)%2===0) {
-            ctx.save(); ctx.translate(player.x, player.y);
+            ctx.save(); 
+            ctx.translate(player.x + player.w/2, player.y + player.h/2);
+            ctx.rotate(player.tilt);
+            ctx.translate(-player.w/2, -player.h/2);
             
             if (sprites.player.loaded) {
                 let drawW = player.w * SPRITE_SCALE, drawH = player.h * SPRITE_SCALE;
@@ -548,6 +693,13 @@ function draw() {
                 ctx.fillStyle = "#111"; ctx.strokeStyle = player.color; ctx.lineWidth = 2;
                 ctx.beginPath(); ctx.moveTo(player.w, player.h/2); ctx.lineTo(player.w*0.4, 0); ctx.lineTo(0, player.h*0.2); ctx.lineTo(10, player.h/2); ctx.lineTo(0, player.h*0.8); ctx.lineTo(player.w*0.4, player.h); ctx.closePath(); ctx.fill(); ctx.stroke();
                 ctx.fillStyle = "#f05"; ctx.fillRect(-8, player.h/2-4, 12 + Math.random()*5, 8);
+            }
+
+            if (player.muzzleFlash > 0) {
+                ctx.fillStyle = "#ffffff";
+                ctx.globalAlpha = 0.85;
+                ctx.beginPath(); ctx.arc(player.w + 4, player.h/2, 7, 0, Math.PI*2); ctx.fill();
+                ctx.globalAlpha = 1.0;
             }
             ctx.restore();
 
@@ -577,31 +729,35 @@ function draw() {
         ctx.restore();
 
         enemies.forEach(e => {
-            let isFlashing = false; if (e.flash > 0) { e.flash--; isFlashing = true; }
-            if (isFlashing) { ctx.fillStyle = "#fff"; ctx.fillRect(e.x, e.y, e.w, e.h); }
-            else {
-                let spriteKey = "enemy_" + e.type;
-                if (sprites[spriteKey] && sprites[spriteKey].loaded) {
-                    ctx.save(); 
-                    let drawW = e.w * SPRITE_SCALE, drawH = e.h * SPRITE_SCALE;
-                    let drawX = e.x - (drawW - e.w) / 2, drawY = e.y - (drawH - e.h) / 2;
+            let isFlashing = e.flash > 0;
+            let spriteKey = "enemy_" + e.type;
+            if (sprites[spriteKey] && sprites[spriteKey].loaded) {
+                ctx.save(); 
+                let drawW = e.w * SPRITE_SCALE, drawH = e.h * SPRITE_SCALE;
+                let drawX = e.x - (drawW - e.w) / 2, drawY = e.y - (drawH - e.h) / 2;
+                ctx.drawImage(sprites[spriteKey].img, drawX, drawY, drawW, drawH);
+                if (isFlashing) {
+                    ctx.globalCompositeOperation = "lighter";
                     ctx.drawImage(sprites[spriteKey].img, drawX, drawY, drawW, drawH);
-                    if (e.type === "HEAVY") { ctx.fillStyle="#f00"; ctx.fillRect(e.x, e.y-8, e.w*(e.hp/(4+(gameLevel*2))), 4); }
-                    ctx.restore();
-                } else {
-                    if (e.type === "SHOOT") { drawFastNeon(e.x, e.y, e.w, e.h, e.c); ctx.fillStyle="#fff"; ctx.fillRect(e.x-4, e.y+12, 8, 8); }
-                    else if (e.type === "FLY") { drawFastNeon(e.x, e.y+8, e.w, e.h-16, e.c); ctx.fillStyle="#fff"; ctx.fillRect(e.x+4, e.y, e.w-8, 4); }
-                    else if (e.type === "KAMI") { drawFastNeon(e.x, e.y, e.w, e.h, e.c); ctx.fillStyle="#fff"; ctx.beginPath(); ctx.moveTo(e.x+e.w, e.y+e.h/2); ctx.lineTo(e.x, e.y); ctx.lineTo(e.x, e.y+e.h); ctx.fill(); }
-                    else if (e.type === "HEAVY") { ctx.fillStyle = "#111"; ctx.fillRect(e.x, e.y, e.w, e.h); ctx.strokeStyle = e.c; ctx.lineWidth = 3; ctx.strokeRect(e.x, e.y, e.w, e.h); let eyeGlow = e.tmr > 90 ? "#fff" : "#f00"; drawFastNeon(e.x+10, e.y+15, 12, 12, eyeGlow); ctx.fillStyle="#f00"; ctx.fillRect(e.x, e.y-8, e.w*(e.hp/(4+(gameLevel*2))), 4); }
+                    ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+                    ctx.fillRect(e.x, e.y, e.w, e.h);
                 }
+                ctx.restore();
+                if (e.type === "HEAVY") { ctx.fillStyle="#f00"; ctx.fillRect(e.x, e.y-8, e.w*(e.hp/(4+(gameLevel*2))), 4); }
+            } else {
+                let col = isFlashing ? "#ffffff" : e.c;
+                if (e.type === "SHOOT") { drawFastNeon(e.x, e.y, e.w, e.h, col); ctx.fillStyle="#fff"; ctx.fillRect(e.x-4, e.y+12, 8, 8); }
+                else if (e.type === "FLY") { drawFastNeon(e.x, e.y+8, e.w, e.h-16, col); ctx.fillStyle="#fff"; ctx.fillRect(e.x+4, e.y, e.w-8, 4); }
+                else if (e.type === "KAMI") { drawFastNeon(e.x, e.y, e.w, e.h, col); ctx.fillStyle="#fff"; ctx.beginPath(); ctx.moveTo(e.x+e.w, e.y+e.h/2); ctx.lineTo(e.x, e.y); ctx.lineTo(e.x, e.y+e.h); ctx.fill(); }
+                else if (e.type === "HEAVY") { ctx.fillStyle = isFlashing ? "#fff" : "#111"; ctx.fillRect(e.x, e.y, e.w, e.h); ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.strokeRect(e.x, e.y, e.w, e.h); let eyeGlow = e.tmr > 90 ? "#fff" : "#f00"; drawFastNeon(e.x+10, e.y+15, 12, 12, eyeGlow); ctx.fillStyle="#f00"; ctx.fillRect(e.x, e.y-8, e.w*(e.hp/(4+(gameLevel*2))), 4); }
             }
         });
 
         if (bossActive && bossWarningTimer > 0) { ctx.textAlign="center"; ctx.fillStyle=(Math.floor(Date.now()/100)%2===0)?"#f05":"#fff"; ctx.font="900 24px 'Montserrat', sans-serif"; ctx.fillText(t("bossWarning"), canvas.width/2, 120); ctx.textAlign="left"; }
         
         if (boss !== null) {
-            if (boss.flash > 0) boss.flash--;
-            let isFlashing = boss.flash > 0; let bPhaseCol = isFlashing ? "#ffffff" : (boss.phase === 2 ? "#f00" : getLevelColor());
+            let isFlashing = boss.flash > 0; 
+            let bPhaseCol = isFlashing ? "#ffffff" : (boss.phase === 2 ? "#f00" : getLevelColor());
             
             let activeBossSprite = sprites[`boss${gameLevel}`];
             if (gameLevel === 5 && boss.phase === 2) activeBossSprite = sprites.boss5_ultra;
@@ -610,7 +766,12 @@ function draw() {
                 ctx.save(); 
                 let drawW = boss.w * SPRITE_SCALE, drawH = boss.h * SPRITE_SCALE;
                 let drawX = boss.x - (drawW - boss.w) / 2, drawY = boss.y - (drawH - boss.h) / 2;
-                ctx.drawImage(activeBossSprite.img, drawX, drawY, drawW, drawH); ctx.restore();
+                ctx.drawImage(activeBossSprite.img, drawX, drawY, drawW, drawH); 
+                if (isFlashing) {
+                    ctx.globalCompositeOperation = "lighter";
+                    ctx.drawImage(activeBossSprite.img, drawX, drawY, drawW, drawH);
+                }
+                ctx.restore();
             } else {
                 ctx.save(); ctx.translate(boss.x + boss.w/2, boss.y + boss.h/2);
                 ctx.fillStyle = isFlashing ? "rgba(255, 255, 255, 0.45)" : "#111"; ctx.strokeStyle = bPhaseCol; ctx.lineWidth = boss.phase === 2 ? 6 : 4;
@@ -760,7 +921,7 @@ function draw() {
         ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; 
         ctx.strokeRect(btnX, startY, btnW, btnH);
         ctx.fillStyle = "#fff"; ctx.font = "bold 16px 'Montserrat', sans-serif";
-        ctx.fillText(t("audio") + (soundEnabled ? t("on") : t("off")), cx, startY + 26);
+        ctx.fillText(t("audio") + (soundEnabled ? t("on" ) : t("off")), cx, startY + 26);
         
         ctx.strokeRect(btnX, startY + gap, btnW, btnH);
         ctx.fillText(t("lang") + currentLang.toUpperCase(), cx, startY + gap + 26);
@@ -792,16 +953,16 @@ function draw() {
 let lastTime = 0;
 function gameLoop(timestamp) { 
     if (!lastTime) lastTime = timestamp;
-    let dt = (timestamp - lastTime) / 16.66; // Normalizzato su 60 FPS
+    let dt = (timestamp - lastTime) / 16.66;
     lastTime = timestamp;
-    if (dt > 3) dt = 3; // Previene "salti" enormi se cambi scheda
+    if (dt > 3) dt = 3;
 
     update(dt); 
     draw(); 
     requestAnimationFrame(gameLoop); 
 }
 
-window.onload = () => { resizeCanvas(); requestAnimationFrame(gameLoop); };
+window.onload = () => { resizeCanvas(); tryLockLandscape(); requestAnimationFrame(gameLoop); };
 </script>
 </body>
 </html>
