@@ -11,7 +11,7 @@ Progettato con un approccio **Mobile-First**, garantisce un avvio immediato in o
 
 ---
 
-### 🕹️ [CLICCA QUI PER GIOCARE SUBITO ONLINE](https://davide23567.github.io/Neon-Impact/)
+### 🕹️ [CLICCA QUI PER GIOCARE SUBITO ONLINE](https://davide23567.github.io/neon-impact/)
 
 ---
 
