@@ -1,39 +1,40 @@
-# 🚀 Neon Impact
+# ⚡ Neon Impact
 
-![HTML5](https://img.shields.io/badge/HTML5_Canvas-E34F26?style=for-the-badge&logo=html5&logoColor=white)
-![JavaScript](https://img.shields.io/badge/Vanilla_JS-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
-![Mobile First](https://img.shields.io/badge/Mobile-First-007AFF?style=for-the-badge)
-![60 FPS](https://img.shields.io/badge/Performance-60_FPS-FF2D55?style=for-the-badge)
-![Zero Dependencies](https://img.shields.io/badge/Zero-Dependencies-34C759?style=for-the-badge)
+> Action game multi-stage e boss-rush sviluppato in architettura single-file e ottimizzato per il web mobile.
 
-**Neon Impact** è uno sparatutto arcade 2D spaziale frenetico con approccio *mobile-first*, sviluppato interamente in puro Vanilla JavaScript e HTML5 Canvas. Progettato per offrire un'esperienza fluida a 60fps su smartphone e desktop, racchiude grafica vettoriale neon, fisica particellare, controlli touch LERP e sintetizzatore audio in un singolo file HTML senza dipendenze esterne.
+[![Gioca Ora](https://img.shields.io/badge/GIOCA%20ORA-Live%20su%20GitHub%20Pages-success?style=for-the-badge&logo=github)](https://davide-raimondi.github.io/neon-impact/)
 
-🎮 **[Gioca alla Live Demo qui](https://davide-raimondi.github.io/neon-impact/)**
+**Neon Impact** è un gioco d'azione web-based caratterizzato da un'estetica neon fluida e controlli progettati per gli schermi touch. Interamente racchiuso in un singolo file HTML, CSS e JavaScript per garantire caricamenti istantanei e massima portabilità.
 
----
+## ✨ Funzionalità Principali
 
-## ✨ Caratteristiche Principali
+- 📱 **Mobile-First Design**: Controlli touch reattivi e layout a schermo intero ottimizzato per viewport verticali.
+- 👾 **Boss Fights Multi-Stage**: Sfide dinamiche con pattern di attacco progressivi.
+- 🎨 **Estetica Neon**: Stile visivo ad alto contrasto con feedback visivi e sonori in tempo reale.
+- 🚀 **Single-File Architecture**: Codice completo racchiuso in un unico file autonomo, senza dipendenze esterne.
 
-* **🕹️ Controlli Touch LERP & Delta Time:** Movimento dell'astronave ultra-fluido con interpolazione lineare (LERP) calibrata per il controllo con un solo dito e loop di gioco basato su Delta Time per garantire la stessa velocità su qualsiasi frequenza di aggiornamento dello schermo.
-* **👾 5 Livelli & Boss Fight Multi-Fase:** Progressione adrenalinica attraverso 5 settori spaziali con ondate di nemici unici e battaglie contro Boss dotati di pattern d'attacco dedicati.
-* **⚡ Sistema di Power-Up & Armi:** Potenziamenti raccoglibili in tempo reale (fuoco multiplo, scudi energetici, overdrive) ed effetti di screen-shake e particelle neon ad ogni esplosione.
-* **🔊 Audio Procedurale Sintetizzato:** Effetti sonori sci-fi ed esplosioni generati in tempo reale tramite **Web Audio API**, senza bisogno di caricare file audio esterni.
-* **💾 Salvataggio Record Locale:** Massimi punteggi e progressi salvati automaticamente nel browser tramite `localStorage`.
+## 🛠 Tecnologie Utilizzate
 
----
+- **HTML5** per il rendering dell'area di gioco e dell'interfaccia.
+- **CSS3** per lo stile neon, il layout responsive e le animazioni UI.
+- **Vanilla JavaScript (ES6+)** per il game loop, il sistema di collisioni e le meccaniche dei boss.
 
-## 🛠️ Architettura "Single-File"
+## 🕹 Come Giocare
 
-L'intero gioco risiede in un unico file `index.html`:
-* **Zero Dipendenze:** Nessun framework, libreria esterna o asset grafico/audio da scaricare.
-* **Caricamento Istantaneo:** Pronto all'uso sia online che completamente offline.
-* **Pronto per Web & Mobile Wrapper:** Ideale per GitHub Pages, PWA o l'integrazione diretta in una WebView Android/iOS.
+Puoi giocare direttamente dal browser, sia da smartphone che da PC, senza alcuna installazione:
 
----
+👉 **[Gioca ora a Neon Impact su GitHub Pages](https://davide-raimondi.github.io/neon-impact/)**
 
-## 🚀 Come Iniziare
+### Esecuzione in Locale
+1. Clona il repository:
+```bash
+git clone [https://github.com/davide-raimondi/neon-impact.git](https://github.com/davide-raimondi/neon-impact.git)
+```
+2. Apri il file `index.html` nel tuo browser.
 
-1. Clona il repository o scarica il file `index.html`:
-   ```bash
-   git clone [https://github.com/davide-raimondi/neon-impact.git](https://github.com/davide-raimondi/neon-impact.git)
-   
+## 🤝 Crediti e Contatti
+
+Sviluppato da **Davide Raimondi**.
+- **GitHub**: [@davide-raimondi](https://github.com/davide-raimondi)
+- **Instagram**: [@davide.raimondi94](https://www.instagram.com/davide.raimondi94)
+  
