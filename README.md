@@ -32,4 +32,4 @@ Progettato con un approccio **Mobile-First**, garantisce un avvio immediato in o
 ## 🛠️ Esecuzione in Locale
 1. Clona il repository:
    ```bash
-   git clone [https://github.com/davide23567/Neon-Impact.git](https://github.com/davide23567/Neon-Impact.git)
+   git clone [https://github.com/davide23567/neon-impact.git](https://github.com/davide23567/neon-impact.git)
