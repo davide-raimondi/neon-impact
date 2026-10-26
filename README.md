@@ -1,35 +1,39 @@
-# 🚀 Neon Impact: Protocol Zero
+# 🚀 Neon Impact
 
-![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
-![JavaScript](https://img.shields.io/badge/JavaScript-323330?style=for-the-badge&logo=javascript&logoColor=F7DF1E)
-![Canvas API](https://img.shields.io/badge/Canvas_API-00599C?style=for-the-badge&logo=html5&logoColor=white)
-![Live Demo](https://img.shields.io/badge/Gioca_Online-00ffff?style=for-the-badge&logo=google-chrome&logoColor=black)
+![HTML5](https://img.shields.io/badge/HTML5_Canvas-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![JavaScript](https://img.shields.io/badge/Vanilla_JS-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![Mobile First](https://img.shields.io/badge/Mobile-First-007AFF?style=for-the-badge)
+![60 FPS](https://img.shields.io/badge/Performance-60_FPS-FF2D55?style=for-the-badge)
+![Zero Dependencies](https://img.shields.io/badge/Zero-Dependencies-34C759?style=for-the-badge)
 
-**Neon Impact: Protocol Zero** è uno sparatutto arcade 2D a scorrimento (Shoot 'em up) sviluppato in puro **Vanilla JavaScript** e **HTML5 Canvas**, senza l'impiego di librerie o motori di terze parti.
+**Neon Impact** è uno sparatutto arcade 2D spaziale frenetico con approccio *mobile-first*, sviluppato interamente in puro Vanilla JavaScript e HTML5 Canvas. Progettato per offrire un'esperienza fluida a 60fps su smartphone e desktop, racchiude grafica vettoriale neon, fisica particellare, controlli touch LERP e sintetizzatore audio in un singolo file HTML senza dipendenze esterne.
 
-Progettato con un approccio **Mobile-First**, garantisce un avvio immediato in orientamento orizzontale su qualsiasi browser mobile, abbinato a un sistema di movimento fluido tramite interpolazione lineare.
-
----
-
-### 🕹️ [CLICCA QUI PER GIOCARE SUBITO ONLINE](https://davide23567.github.io/neon-impact/)
+🎮 **[Gioca alla Live Demo qui](https://davide-raimondi.github.io/neon-impact/)**
 
 ---
 
 ## ✨ Caratteristiche Principali
-*   **Avvio Immediato in Landscape**: Gestione automatica dell'orientamento dello schermo all'apertura della pagina.
-*   **Controlli Touch con Interpolazione (LERP)**: Sistema di controllo a scorrimento con offset visivo che previene l'occlusione visiva della navicella da parte del dito.
-*   **Delta Time Engine**: Velocità di gioco, cadenza di tiro e pattern dei nemici uniformati indipendentemente dal refresh rate (60Hz, 90Hz, 120Hz).
-*   **Audio Sintetizzato (Web Audio API)**: Effetti sonori per spari, esplosioni, danni e sirene boss generati proceduralmente via codice, senza file audio esterni.
-*   **Prestazioni Ottimizzate**: Rendering a basso consumo energetico tramite tecniche di fusione trasparente (Alpha Compositing).
-*   **5 Livelli e Boss Fight**: Progressioni con nemici diversificati (Kamikaze, Incrociatori pesanti con impulsi EMP) e scontro finale su due fasi.
-*   **Supporto Multipiattaforma**: Interfaccia ottimizzata per touch screen e controlli secondari attivi per mouse e tastiera (`WASD`/Frecce, `Spazio` per sparare, `P`/`Esc` per la pausa).
 
-## 🎮 Schema dei Controlli
-*   **Movimento**: Scorri con il dito sulla metà sinistra dello schermo (o destra se impostata la modalità mancini nelle opzioni).
-*   **Sparo**: Mantieni premuto sulla metà opposta dello schermo per attivare il fuoco continuo.
-*   **Pausa**: Tasto dedicato posizionato nell'angolo in alto a destra.
+* **🕹️ Controlli Touch LERP & Delta Time:** Movimento dell'astronave ultra-fluido con interpolazione lineare (LERP) calibrata per il controllo con un solo dito e loop di gioco basato su Delta Time per garantire la stessa velocità su qualsiasi frequenza di aggiornamento dello schermo.
+* **👾 5 Livelli & Boss Fight Multi-Fase:** Progressione adrenalinica attraverso 5 settori spaziali con ondate di nemici unici e battaglie contro Boss dotati di pattern d'attacco dedicati.
+* **⚡ Sistema di Power-Up & Armi:** Potenziamenti raccoglibili in tempo reale (fuoco multiplo, scudi energetici, overdrive) ed effetti di screen-shake e particelle neon ad ogni esplosione.
+* **🔊 Audio Procedurale Sintetizzato:** Effetti sonori sci-fi ed esplosioni generati in tempo reale tramite **Web Audio API**, senza bisogno di caricare file audio esterni.
+* **💾 Salvataggio Record Locale:** Massimi punteggi e progressi salvati automaticamente nel browser tramite `localStorage`.
 
-## 🛠️ Esecuzione in Locale
-1. Clona il repository:
+---
+
+## 🛠️ Architettura "Single-File"
+
+L'intero gioco risiede in un unico file `index.html`:
+* **Zero Dipendenze:** Nessun framework, libreria esterna o asset grafico/audio da scaricare.
+* **Caricamento Istantaneo:** Pronto all'uso sia online che completamente offline.
+* **Pronto per Web & Mobile Wrapper:** Ideale per GitHub Pages, PWA o l'integrazione diretta in una WebView Android/iOS.
+
+---
+
+## 🚀 Come Iniziare
+
+1. Clona il repository o scarica il file `index.html`:
    ```bash
-   git clone [https://github.com/davide23567/neon-impact.git](https://github.com/davide23567/neon-impact.git)
+   git clone [https://github.com/davide-raimondi/neon-impact.git](https://github.com/davide-raimondi/neon-impact.git)
+   
