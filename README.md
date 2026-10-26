@@ -1,23 +1,23 @@
 # ⚡ Neon Impact
 
-> Action game multi-stage e boss-rush sviluppato in architettura single-file e ottimizzato per il web mobile.
+> Sparatutto arcade 2D e boss-rush sviluppato in architettura single-file e ottimizzato per il web mobile.
 
 [![Gioca Ora](https://img.shields.io/badge/GIOCA%20ORA-Live%20su%20GitHub%20Pages-success?style=for-the-badge&logo=github)](https://davide-raimondi.github.io/neon-impact/)
 
-**Neon Impact** è un gioco d'azione web-based caratterizzato da un'estetica neon fluida e controlli progettati per gli schermi touch. Interamente racchiuso in un singolo file HTML, CSS e JavaScript per garantire caricamenti istantanei e massima portabilità.
+**Neon Impact** è un action game web-based caratterizzato da grafica vettoriale ad alto contrasto, combattimento automatico fluido e controlli pensati per gli schermi touch. Interamente racchiuso in un singolo file HTML, CSS e JavaScript per garantire caricamenti istantanei e massima portabilità.
 
 ## ✨ Funzionalità Principali
 
 - 📱 **Mobile-First Design**: Controlli touch reattivi e layout a schermo intero ottimizzato per viewport verticali.
-- 👾 **Boss Fights Multi-Stage**: Sfide dinamiche con pattern di attacco progressivi.
-- 🎨 **Estetica Neon**: Stile visivo ad alto contrasto con feedback visivi e sonori in tempo reale.
-- 🚀 **Single-File Architecture**: Codice completo racchiuso in un unico file autonomo, senza dipendenze esterne.
+- 👾 **Boss Battle Multi-Fase**: Scontri dinamici con boss che evolvono i propri pattern di attacco durante il combattimento.
+- 🎨 **Grafica Vettoriale & Audio Procedurale**: Effetti visivi neon e comparto sonoro generato in tempo reale senza asset esterni.
+- 🚀 **Single-File Architecture**: Tutto il codice risiede in un unico file autonomo.
 
 ## 🛠 Tecnologie Utilizzate
 
-- **HTML5** per il rendering dell'area di gioco e dell'interfaccia.
-- **CSS3** per lo stile neon, il layout responsive e le animazioni UI.
-- **Vanilla JavaScript (ES6+)** per il game loop, il sistema di collisioni e le meccaniche dei boss.
+- **HTML5 Canvas** per il rendering grafico a 60 FPS.
+- **CSS3** per l'interfaccia utente, gli overlay e le animazioni.
+- **Vanilla JavaScript (ES6+)** per il game loop, la fisica, le collisioni e la **Web Audio API**.
 
 ## 🕹 Come Giocare
 
@@ -37,4 +37,3 @@ git clone [https://github.com/davide-raimondi/neon-impact.git](https://github.co
 Sviluppato da **Davide Raimondi**.
 - **GitHub**: [@davide-raimondi](https://github.com/davide-raimondi)
 - **Instagram**: [@davide.raimondi94](https://www.instagram.com/davide.raimondi94)
-  
